@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 from pathlib import Path
@@ -46,6 +47,9 @@ app.add_middleware(
     allow_origins=["*"], allow_credentials=True,
     allow_methods=["*"], allow_headers=["*"],
 )
+
+# serve simple frontend
+app.mount("/ui", StaticFiles(directory="frontend", html=True), name="ui")
 
 EXPORTS_DIR = Path("exports"); EXPORTS_DIR.mkdir(exist_ok=True)
 
