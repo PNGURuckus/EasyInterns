@@ -5,5 +5,8 @@
     "jobbank_canada": "https://www.jobbank.gc.ca/rss/jobsearch?fsrc=16&term=internship",
     "eluta": "https://www.eluta.ca/rss/internship-jobs",
     "talentca": "https://ca.talent.com/rss?k=internship&l=Canada"
-  }
+  },
+  "indeed": true,
+  "talent": true
 }
+
