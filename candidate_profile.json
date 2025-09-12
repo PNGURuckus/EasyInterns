@@ -1,0 +1,13 @@
+
+{
+  "name": "Student Name",
+  "email": "me@example.com",
+  "education_level": "Undergrad Year 2",
+  "location_preference": "Toronto",
+  "remote_ok": true,
+  "visa_requirement": "Canadian citizen",
+  "interests": ["finance", "data", "sustainability"],
+  "skills": ["python", "sql", "excel"],
+  "must_have_keywords": ["intern", "summer"],
+  "nice_to_have_keywords": ["bank", "quant"]
+}

@@ -1,0 +1,9 @@
+{
+  "rss_feeds": {
+    "weworkremotely": "https://weworkremotely.com/categories/remote-internships.rss",
+    "remotive": "https://remotive.com/remote-jobs/rss?category=internships",
+    "jobbank_canada": "https://www.jobbank.gc.ca/rss/jobsearch?fsrc=16&term=internship",
+    "eluta": "https://www.eluta.ca/rss/internship-jobs",
+    "talentca": "https://ca.talent.com/rss?k=internship&l=Canada"
+  }
+}
