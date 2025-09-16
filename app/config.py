@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     enable_greenhouse: bool = Field(default=True)
     enable_lever: bool = Field(default=True)
     enable_rss: bool = Field(default=True)
+    indeed_proxy_url: str | None = Field(default=None)
 
     class Config:
         env_file = ".env"

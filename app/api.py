@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 from pathlib import Path
 
+import httpx
+
 from .config import settings
 from .models import CandidateProfile
 from .pipeline import scrape_and_store, get_ranked, export_to_csv
@@ -20,6 +22,31 @@ DEFAULT_GREENHOUSE = [
     "shopify","doordash","snowflake","roblox","instacart",
     "palantir","datadog","cloudflare","neo4j","snap"
 ]
+
+
+async def _filter_live_lever_companies(companies: List[str]):
+    """Return only Lever slugs that respond with HTTP 200."""
+    if not companies:
+        return [], []
+
+    ok, skipped = [], []
+    async with httpx.AsyncClient(
+        headers={"User-Agent": settings.user_agent},
+        timeout=settings.http_timeout_seconds,
+    ) as client:
+        for slug in companies:
+            url = f"https://api.lever.co/v0/postings/{slug}?mode=json"
+            try:
+                resp = await client.get(url)
+            except Exception:
+                skipped.append(slug)
+                continue
+            if resp.status_code == 200:
+                ok.append(slug)
+            else:
+                skipped.append(slug)
+
+    return ok, skipped
 
 class ProfileIn(BaseModel):
     name: str
@@ -78,8 +105,9 @@ async def scrape_quickstart(cfg: QuickstartIn):
         return out
 
     lever, gh = dedupe(lever), dedupe(gh)
+    lever, lever_skipped = await _filter_live_lever_companies(lever)
     summary = await scrape_and_store({"lever_companies": lever, "greenhouse_companies": gh, "rss_feeds": cfg.rss_feeds or {}})
-    return {"lever_used": lever, "greenhouse_used": gh, **summary}
+    return {"lever_used": lever, "lever_skipped": lever_skipped, "greenhouse_used": gh, **summary}
 
 @app.post("/rank")
 def rank(profile: ProfileIn, limit: int = Query(200, ge=1, le=2000), min_score: float = Query(0.0), remote_only: bool = Query(False)):

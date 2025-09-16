@@ -56,7 +56,7 @@ class RSSScraper:
         if not self.feeds:
             return []
         opps = []
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             for name, url in self.feeds.items():
                 part = await self.fetch_feed(client, name, url)
                 opps.extend(part)
