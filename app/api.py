@@ -2,7 +2,7 @@ from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 from pathlib import Path
 
@@ -28,10 +28,10 @@ class ProfileIn(BaseModel):
     location_preference: Optional[str] = None
     remote_ok: bool = True
     visa_requirement: Optional[str] = None
-    interests: List[str] = []
-    skills: List[str] = []
-    must_have_keywords: List[str] = []
-    nice_to_have_keywords: List[str] = []
+    interests: List[str] = Field(default_factory=list)
+    skills: List[str] = Field(default_factory=list)
+    must_have_keywords: List[str] = Field(default_factory=list)
+    nice_to_have_keywords: List[str] = Field(default_factory=list)
 
 class QuickstartIn(BaseModel):
     use_defaults: bool = True
