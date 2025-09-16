@@ -6,3 +6,4 @@ pydantic-settings
 SQLAlchemy
 beautifulsoup4
 feedparser
+cloudscraper
