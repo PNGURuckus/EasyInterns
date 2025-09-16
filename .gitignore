@@ -1,0 +1,22 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.db
+*.sqlite3
+.coverage
+htmlcov/
+uvicorn.log
+.uvicorn_pid
+
+# Environments
+.env
+.env.*
+venv/
+.venv/
+
+# Node artifacts
+node_modules/
+next-env.d.ts

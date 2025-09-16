@@ -1,0 +1,112 @@
+{
+  "supabase_url": "https://PROJECT.supabase.co",
+  "supabase_anon_key": "env",
+  "supabase_service_key": "env",
+  "supabase_jwt_secret": "env",
+  "database_url": "postgresql://user:pass@localhost:5432/easyinterns",
+  "redis_url": "redis://localhost:6379",
+  
+  "ai_provider": "openai",
+  "openai_api_key": "env",
+  "clearbit_logo_base": "https://logo.clearbit.com",
+  
+  "feature_flags": {
+    "scraper_linkedin": false,
+    "scraper_glassdoor": false,
+    "enable_ai_features": true,
+    "enable_email_extraction": true,
+    "enable_pdf_export": true
+  },
+  
+  "scoring_weights": {
+    "field_match": 0.3,
+    "skill_overlap": 0.25,
+    "recency_decay": 0.2,
+    "location_distance": 0.15,
+    "modality_match": 0.05,
+    "salary_present": 0.03,
+    "government_program": 0.02
+  },
+  
+  "scraper_config": {
+    "job_bank_ca": {
+      "enabled": true,
+      "type": "api",
+      "cooldown_sec": 300,
+      "base_url": "https://www.jobbank.gc.ca/jobsearch/jobsearch"
+    },
+    "indeed_ca": {
+      "enabled": true,
+      "type": "html",
+      "cooldown_sec": 600,
+      "base_url": "https://ca.indeed.com"
+    },
+    "talent_com": {
+      "enabled": true,
+      "type": "html", 
+      "cooldown_sec": 450,
+      "base_url": "https://www.talent.com"
+    },
+    "ontario_ps": {
+      "enabled": true,
+      "type": "rss",
+      "cooldown_sec": 1800,
+      "feed_url": "https://www.gojobs.gov.on.ca/RSS.aspx"
+    },
+    "bc_ps": {
+      "enabled": true,
+      "type": "rss",
+      "cooldown_sec": 1800,
+      "feed_url": "https://www2.gov.bc.ca/gov/content/careers-myhr/job-seekers/current-job-postings"
+    },
+    "google_jobs": {
+      "enabled": false,
+      "type": "api",
+      "cooldown_sec": 900
+    },
+    "university_boards": {
+      "enabled": true,
+      "type": "rss",
+      "cooldown_sec": 3600,
+      "feeds": [
+        "https://careers.utoronto.ca/rss",
+        "https://www.mcgill.ca/careers/rss"
+      ]
+    },
+    "linkedin": {
+      "enabled": false,
+      "type": "html",
+      "cooldown_sec": 1200,
+      "feature_flag": "scraper_linkedin"
+    },
+    "glassdoor": {
+      "enabled": false,
+      "type": "html", 
+      "cooldown_sec": 1800,
+      "feature_flag": "scraper_glassdoor"
+    }
+  },
+  
+  "email_extraction": {
+    "confidence_threshold": 0.5,
+    "display_threshold": 0.7,
+    "mx_lookup_enabled": true,
+    "patterns": {
+      "careers": ["careers@", "jobs@", "hr@", "recruiting@"],
+      "contact": ["contact@", "info@", "hello@"],
+      "hiring": ["hiring@", "talent@", "people@"]
+    }
+  },
+  
+  "rate_limiting": {
+    "per_minute": 100,
+    "per_hour": 1000,
+    "burst_limit": 20
+  },
+  
+  "monitoring": {
+    "sentry_dsn": "env",
+    "log_level": "INFO",
+    "enable_telemetry": true
+  }
+}

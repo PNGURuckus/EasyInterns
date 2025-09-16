@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyInterns - Find Your Perfect Internship</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-blue-600">EasyInterns</h1>
+                    <span class="ml-2 text-gray-500">Find Your Dream Internship</span>
+                </div>
+                <nav class="flex space-x-4">
+                    <a href="#" class="text-gray-700 hover:text-blue-600">Browse</a>
+                    <a href="#" class="text-gray-700 hover:text-blue-600">Saved</a>
+                    <a href="/download/internships.csv" class="text-gray-700 hover:text-blue-600">Download CSV</a>
+                    <a href="/admin" class="text-gray-700 hover:text-blue-600">Admin</a>
+                    <a href="#" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Sign In</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl md:text-6xl font-bold mb-6">Find Your Perfect Internship</h2>
+            <p class="text-xl md:text-2xl mb-8 opacity-90">Discover opportunities from top companies across Canada</p>
+            
+            <!-- Search Bar -->
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <input type="text" id="searchQuery" placeholder="Search internships (e.g., Software Engineer, Marketing)" 
+                                   class="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div class="flex-1">
+                            <input type="text" id="locationQuery" placeholder="Location (e.g., Toronto, Vancouver)" 
+                                   class="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <button onclick="searchInternships()" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold">
+                            <i class="fas fa-search mr-2"></i>Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="bg-white border-b py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap gap-4 items-center">
+                <span class="font-semibold text-gray-700">Filters:</span>
+                <select class="border border-gray-300 rounded-lg px-3 py-2">
+                    <option>All Industries</option>
+                    <option>Technology</option>
+                    <option>Finance</option>
+                    <option>Marketing</option>
+                    <option>Healthcare</option>
+                </select>
+                <select class="border border-gray-300 rounded-lg px-3 py-2">
+                    <option>All Locations</option>
+                    <option>Toronto</option>
+                    <option>Vancouver</option>
+                    <option>Montreal</option>
+                    <option>Calgary</option>
+                </select>
+                <label class="flex items-center">
+                    <input id="remoteOnly" type="checkbox" class="mr-2">
+                    <span>Remote Only</span>
+                </label>
+                <label class="flex items-center">
+                    <span class="mr-2">Group by</span>
+                    <select id="groupBy" class="border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="none">None</option>
+                        <option value="field">Field</option>
+                    </select>
+                </label>
+                <label class="flex items-center">
+                    <span class="mr-2">Field</span>
+                    <select id="fieldFilter" class="border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="all">All Fields</option>
+                        <option value="software_engineering">Software Engineering</option>
+                        <option value="data_science">Data Science</option>
+                        <option value="product_management">Product Management</option>
+                        <option value="design_ux_ui">Design / UX / UI</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="devops">DevOps</option>
+                        <option value="cybersecurity">Cybersecurity</option>
+                        <option value="business_analyst">Business Analyst</option>
+                        <option value="research">Research</option>
+                        <option value="sales">Sales</option>
+                    </select>
+                </label>
+                <button class="text-blue-600 hover:text-blue-800">Clear All</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-900">Available Internships</h3>
+            <div class="flex items-center gap-4">
+                <span class="text-gray-600" id="resultsCount">Loading...</span>
+                <select class="border border-gray-300 rounded-lg px-3 py-2">
+                    <option>Sort by Relevance</option>
+                    <option>Sort by Date</option>
+                    <option>Sort by Company</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-gray-600">Loading internships...</p>
+        </div>
+
+        <!-- Internship Cards -->
+        <div id="internshipGrid" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 hidden">
+            <!-- Cards will be populated by JavaScript -->
+        </div>
+
+        <!-- Load More -->
+        <div id="loadMoreWrap" class="text-center mt-8 hidden">
+            <button onclick="loadMore()" class="bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-black font-semibold">Load More</button>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-12 hidden">
+            <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">No internships found</h3>
+            <p class="text-gray-500">Try adjusting your search criteria or check back later for new opportunities.</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">EasyInterns</h4>
+                    <p class="text-gray-300">Connecting students with amazing internship opportunities across Canada.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">For Students</h4>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="#" class="hover:text-white">Browse Internships</a></li>
+                        <li><a href="#" class="hover:text-white">Resume Builder</a></li>
+                        <li><a href="#" class="hover:text-white">Career Tips</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">For Employers</h4>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="#" class="hover:text-white">Post Internships</a></li>
+                        <li><a href="#" class="hover:text-white">Find Talent</a></li>
+                        <li><a href="#" class="hover:text-white">Pricing</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="#" class="hover:text-white">Help Center</a></li>
+                        <li><a href="#" class="hover:text-white">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
+                <p>&copy; 2024 EasyInterns. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Global pagination state for live search
+        let currentQuery = '';
+        let currentLocation = '';
+        let currentPage = 1;
+        let totalItems = 0;
+        let limitPerPage = 500;
+
+        // Load internships on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Default search to populate many results
+            document.getElementById('searchQuery').value = 'intern';
+            searchInternships();
+        });
+
+        async function loadInternships() {
+            try {
+                const response = await fetch('/internships');
+                const internships = await response.json();
+                
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('resultsCount').textContent = `${internships.length} internships found`;
+                
+                if (internships.length === 0) {
+                    document.getElementById('emptyState').classList.remove('hidden');
+                } else {
+                    displayInternships(internships);
+                }
+            } catch (error) {
+                console.error('Error loading internships:', error);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+            }
+        }
+
+        function displayInternships(internships, { append = false } = {}) {
+            const grid = document.getElementById('internshipGrid');
+            if (!append) grid.innerHTML = '';
+
+            const groupBy = document.getElementById('groupBy').value;
+            const fieldFilter = document.getElementById('fieldFilter').value;
+            let list = internships.slice();
+            if (fieldFilter !== 'all') {
+                list = list.filter(x => (x.field_tag || '').toLowerCase() === fieldFilter);
+            }
+            if (groupBy === 'field') {
+                list.sort((a,b) => (a.field_tag || '').localeCompare(b.field_tag || ''));
+            }
+
+            list.forEach(internship => {
+                const card = createInternshipCard(internship);
+                grid.appendChild(card);
+            });
+            
+            grid.classList.remove('hidden');
+        }
+
+        function createInternshipCard(internship) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border';
+            
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-1">${internship.title}</h4>
+                        <p class="text-blue-600 font-medium">${internship.company || ''}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${internship.field_tag ? `<span class='bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full'>${(internship.field_tag || '').replaceAll('_',' ')}</span>` : ''}
+                        ${internship.source ? `<span class='bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full'>${internship.source}</span>` : ''}
+                        <button class="text-gray-400 hover:text-red-500" title="Save">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center text-gray-600 mb-3">
+                    <i class="fas fa-map-marker-alt mr-2"></i>
+                    <span>${internship.location}</span>
+                </div>
+                
+                <p class="text-gray-700 mb-4 line-clamp-3">${internship.description}</p>
+                
+                <div class="flex justify-between items-center">
+                    <div class="flex gap-2">
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Internship</span>
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Entry Level</span>
+                    </div>
+                    <a href="${internship.apply_url || '#'}" target="_blank" rel="noopener noreferrer" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">
+                        Apply Now
+                    </a>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        async function searchInternships() {
+            currentQuery = document.getElementById('searchQuery').value.trim();
+            currentLocation = document.getElementById('locationQuery').value.trim();
+            currentPage = 1;
+            totalItems = 0;
+            const rppEl = document.getElementById('resultsPerPage');
+            if (rppEl) {
+                const v = parseInt(rppEl.value, 10);
+                if (!isNaN(v)) limitPerPage = v;
+            }
+
+            // Show loading state
+            document.getElementById('internshipGrid').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('loadMoreWrap').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+
+            try {
+                const url = new URL('/api/internships', window.location.origin);
+                url.searchParams.set('live', '1');
+                url.searchParams.set('limit', String(limitPerPage));
+                url.searchParams.set('page', String(currentPage));
+                if (currentQuery) url.searchParams.set('q', currentQuery);
+                if (currentLocation) url.searchParams.set('location', currentLocation);
+                if (document.getElementById('remoteOnly').checked) url.searchParams.set('remote', '1');
+
+                const response = await fetch(url.toString());
+                const data = await response.json();
+                const items = (data && data.data && data.data.internships) ? data.data.internships : [];
+                totalItems = (data && data.data && typeof data.data.total === 'number') ? data.data.total : items.length;
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('resultsCount').textContent = `${totalItems} internships found`;
+
+                if (items.length === 0) {
+                    document.getElementById('emptyState').classList.remove('hidden');
+                } else {
+                    displayInternships(items);
+                    maybeToggleLoadMore();
+                }
+            } catch (err) {
+                console.error('Search failed:', err);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+            }
+        }
+
+        async function loadMore() {
+            try {
+                currentPage += 1;
+                const url = new URL('/api/internships', window.location.origin);
+                url.searchParams.set('live', '1');
+                url.searchParams.set('limit', String(limitPerPage));
+                url.searchParams.set('page', String(currentPage));
+                if (currentQuery) url.searchParams.set('q', currentQuery);
+                if (currentLocation) url.searchParams.set('location', currentLocation);
+                if (document.getElementById('remoteOnly').checked) url.searchParams.set('remote', '1');
+
+                const response = await fetch(url.toString());
+                const data = await response.json();
+                const items = (data && data.data && data.data.internships) ? data.data.internships : [];
+                displayInternships(items, { append: true });
+                maybeToggleLoadMore();
+            } catch (err) {
+                console.error('Load more failed:', err);
+            }
+        }
+
+        function maybeToggleLoadMore() {
+            const shown = currentPage * limitPerPage;
+            if (totalItems > shown) {
+                document.getElementById('loadMoreWrap').classList.remove('hidden');
+            } else {
+                document.getElementById('loadMoreWrap').classList.add('hidden');
+            }
+        }
+        // Inject a Results Per Page control into the Filters bar
+        (function initResultsPerPageControl(){
+            const bar = document.querySelector('section.bg-white.border-b .flex.flex-wrap');
+            if (!bar) return;
+            const wrap = document.createElement('label');
+            wrap.className = 'flex items-center';
+            wrap.innerHTML = `
+                <span class="mr-2">Results</span>
+                <select id="resultsPerPage" class="border border-gray-300 rounded-lg px-3 py-2">
+                    <option value="24">24</option>
+                    <option value="48">48</option>
+                    <option value="96">96</option>
+                    <option value="192">192</option>
+                    <option value="500" selected>500</option>
+                </select>
+            `;
+            bar.appendChild(wrap);
+            document.addEventListener('change', function(e){
+                if (e.target && e.target.id === 'resultsPerPage') {
+                    const v = parseInt(e.target.value, 10) || 96;
+                    limitPerPage = v;
+                    // re-run current search with new page size
+                    searchInternships();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

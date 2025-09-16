@@ -6,11 +6,11 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 from pathlib import Path
 
-from .config import settings
-from .models import CandidateProfile
-from .pipeline import scrape_and_store, get_ranked, export_to_csv
-from .email_harvester import build_email_list
-from .db import fetch_all
+from app.config import settings
+from backend.data.models import CandidateProfile
+from app.pipeline import scrape_and_store, get_ranked, export_to_csv
+from app.email_harvester import build_email_list
+from app.db import fetch_all
 
 DEFAULT_LEVER = [
     "stripe","databricks","square","robinhood","affirm","brex",

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EasyInterns Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <header class="bg-white border-b">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-xl font-semibold">EasyInterns Admin</h1>
+      <nav class="space-x-4">
+        <a class="text-blue-600 hover:underline" href="/">Home</a>
+        <a class="text-blue-600 hover:underline" href="/download/internships.csv">Download CSV</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <section class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-medium text-yellow-900">Admin Token</h2>
+          <p class="text-xs text-yellow-800">Enter the admin token to enable actions. Stored in your browser only.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <input id="adminToken" type="password" placeholder="Enter token" class="border rounded px-2 py-1 text-sm w-64" />
+          <button id="saveTokenBtn" class="bg-yellow-600 text-white px-3 py-1.5 rounded text-sm">Save</button>
+        </div>
+      </div>
+    </section>
+    <section class="bg-white border rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">Upload CSV</h2>
+      <p class="text-sm text-gray-600 mb-4">Upload a CSV with columns: <code>title, company, location, description, apply_url, source, external_id</code>. You can optionally index it into the database immediately.</p>
+      <div class="space-y-4">
+        <input id="csvFile" type="file" accept=".csv" class="block w-full text-sm" />
+        <label class="inline-flex items-center space-x-2">
+          <input id="indexAfterUpload" type="checkbox" class="rounded" />
+          <span>Index into database after upload</span>
+        </label>
+        <div>
+          <button id="uploadBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Upload</button>
+        </div>
+        <pre id="uploadResult" class="bg-gray-100 text-sm p-3 rounded overflow-auto hidden"></pre>
+      </div>
+    </section>
+
+    <section class="bg-white border rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">Status</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="border rounded p-4">
+          <div class="text-gray-500 text-sm">CSV</div>
+          <div class="mt-2">
+            <div><span class="font-medium">Exists:</span> <span id="csvExists">-</span></div>
+            <div><span class="font-medium">Rows:</span> <span id="csvRows">-</span></div>
+            <div><span class="font-medium">Last Modified:</span> <span id="csvMtime">-</span></div>
+          </div>
+        </div>
+        <div class="border rounded p-4">
+          <div class="text-gray-500 text-sm">Database</div>
+          <div class="mt-2">
+            <div><span class="font-medium">Internships:</span> <span id="dbTotal">-</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 space-x-2">
+        <button id="refreshBtn" class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300">Refresh</button>
+        <button id="reindexBtn" class="bg-gray-900 text-white px-3 py-2 rounded hover:bg-black">Re-index CSV</button>
+      </div>
+      <pre id="indexResult" class="bg-gray-100 text-sm p-3 rounded overflow-auto mt-4 hidden"></pre>
+    </section>
+  </main>
+
+  <script>
+    function getToken() {
+      return localStorage.getItem('adminToken') || '';
+    }
+
+    function authHeaders() {
+      const t = getToken();
+      return t ? { 'X-Admin-Token': t } : {};
+    }
+
+    async function refreshStatus() {
+      try {
+        const res = await fetch('/api/ingest/status', { headers: authHeaders() });
+        const data = await res.json();
+        document.getElementById('csvExists').textContent = data.csv_exists ? 'Yes' : 'No';
+        document.getElementById('csvRows').textContent = data.csv_rows ?? 0;
+        document.getElementById('csvMtime').textContent = data.csv_last_modified || '-';
+        document.getElementById('dbTotal').textContent = data.db_total ?? 0;
+      } catch (e) {
+        console.error('Failed to fetch status', e);
+      }
+    }
+
+    async function uploadCsv() {
+      const fileInput = document.getElementById('csvFile');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('Please choose a CSV file');
+        return;
+      }
+      const index = document.getElementById('indexAfterUpload').checked ? '1' : '0';
+      const form = new FormData();
+      form.append('file', file);
+      const btn = document.getElementById('uploadBtn');
+      btn.disabled = true; btn.textContent = 'Uploading...';
+      try {
+        const res = await fetch(`/api/ingest/upload-csv?index=${index}`, { method: 'POST', body: form, headers: authHeaders() });
+        const data = await res.json();
+        const pre = document.getElementById('uploadResult');
+        pre.textContent = JSON.stringify(data, null, 2);
+        pre.classList.remove('hidden');
+        await refreshStatus();
+      } catch (e) {
+        alert('Upload failed');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Upload';
+      }
+    }
+
+    async function reindexCsv() {
+      const btn = document.getElementById('reindexBtn');
+      btn.disabled = true; btn.textContent = 'Re-indexing...';
+      try {
+        const res = await fetch('/api/ingest/index-csv', { method: 'POST', headers: authHeaders() });
+        const data = await res.json();
+        const pre = document.getElementById('indexResult');
+        pre.textContent = JSON.stringify(data, null, 2);
+        pre.classList.remove('hidden');
+        await refreshStatus();
+      } catch (e) {
+        alert('Indexing failed');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Re-index CSV';
+      }
+    }
+
+    function loadSavedToken() {
+      const t = getToken();
+      if (t) document.getElementById('adminToken').value = t;
+    }
+
+    function saveToken() {
+      const v = document.getElementById('adminToken').value.trim();
+      if (!v) { alert('Enter a token'); return; }
+      localStorage.setItem('adminToken', v);
+      refreshStatus();
+    }
+
+    document.getElementById('uploadBtn').addEventListener('click', uploadCsv);
+    document.getElementById('reindexBtn').addEventListener('click', reindexCsv);
+    document.getElementById('refreshBtn').addEventListener('click', refreshStatus);
+    document.getElementById('saveTokenBtn').addEventListener('click', saveToken);
+    loadSavedToken();
+    refreshStatus();
+  </script>
+</body>
+</html>

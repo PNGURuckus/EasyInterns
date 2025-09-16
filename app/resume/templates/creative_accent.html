@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ name or 'Resume' }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+            .page-break { page-break-before: always; }
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .accent-color { color: #3B82F6; }
+        .accent-bg { background-color: #3B82F6; }
+        .accent-border { border-color: #3B82F6; }
+    </style>
+</head>
+<body class="bg-white text-gray-800 text-sm">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header with Creative Design -->
+        <div class="relative bg-gradient-to-r from-blue-600 to-blue-800 text-white p-8">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+            <div class="relative z-10">
+                <h1 class="text-4xl font-light mb-2">{{ name or 'Your Name' }}</h1>
+                <div class="h-1 w-20 bg-white mb-4"></div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        {% if email %}<div class="flex items-center mb-1"><span class="mr-2">✉</span>{{ email }}</div>{% endif %}
+                        {% if phone %}<div class="flex items-center mb-1"><span class="mr-2">📞</span>{{ phone }}</div>{% endif %}
+                    </div>
+                    <div>
+                        {% if location %}<div class="flex items-center mb-1"><span class="mr-2">📍</span>{{ location }}</div>{% endif %}
+                        {% if linkedin %}<div class="flex items-center mb-1"><span class="mr-2">💼</span>{{ linkedin }}</div>{% endif %}
+                        {% if github %}<div class="flex items-center mb-1"><span class="mr-2">🔗</span>{{ github }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8">
+            <!-- Summary -->
+            {% if summary %}
+            <div class="mb-8">
+                <h2 class="text-xl font-bold accent-color mb-4 flex items-center">
+                    <div class="w-8 h-8 accent-bg rounded-full flex items-center justify-center text-white text-xs mr-3">S</div>
+                    PROFESSIONAL SUMMARY
+                </h2>
+                <div class="bg-gray-50 p-4 rounded-lg border-l-4 accent-border">
+                    <p class="text-justify text-gray-700 leading-relaxed italic">{{ summary }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Experience -->
+            {% if experience %}
+            <div class="mb-8">
+                <h2 class="text-xl font-bold accent-color mb-4 flex items-center">
+                    <div class="w-8 h-8 accent-bg rounded-full flex items-center justify-center text-white text-xs mr-3">E</div>
+                    EXPERIENCE
+                </h2>
+                {% for exp in experience %}
+                <div class="mb-6 relative">
+                    <div class="absolute left-0 top-2 w-3 h-3 accent-bg rounded-full"></div>
+                    <div class="ml-6 pl-4 border-l-2 border-gray-200">
+                        <div class="bg-white p-4 rounded-lg shadow-sm border">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h3 class="font-bold text-gray-900 text-lg">{{ exp.title }}</h3>
+                                    <div class="accent-color font-semibold">{{ exp.company }}</div>
+                                    {% if exp.location %}<div class="text-sm text-gray-600">{{ exp.location }}</div>{% endif %}
+                                </div>
+                                <div class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                                    {{ exp.start_date }} - {{ exp.end_date or 'Present' }}
+                                </div>
+                            </div>
+                            {% if exp.bullets %}
+                            <ul class="space-y-2 text-gray-700">
+                                {% for bullet in exp.bullets %}
+                                <li class="flex items-start">
+                                    <span class="accent-color mr-2 mt-1">▶</span>
+                                    <span>{{ bullet }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Education & Skills Grid -->
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <!-- Education -->
+                {% if education %}
+                <div>
+                    <h2 class="text-xl font-bold accent-color mb-4 flex items-center">
+                        <div class="w-8 h-8 accent-bg rounded-full flex items-center justify-center text-white text-xs mr-3">🎓</div>
+                        EDUCATION
+                    </h2>
+                    {% for edu in education %}
+                    <div class="bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border-l-4 accent-border mb-4">
+                        <h3 class="font-bold text-gray-900">{{ edu.degree }}</h3>
+                        <div class="accent-color font-medium">{{ edu.school }}</div>
+                        {% if edu.location %}<div class="text-sm text-gray-600">{{ edu.location }}</div>{% endif %}
+                        <div class="flex justify-between items-center mt-2">
+                            {% if edu.graduation_date %}<span class="text-sm text-gray-600">{{ edu.graduation_date }}</span>{% endif %}
+                            {% if edu.gpa %}<span class="text-sm accent-color font-semibold">GPA: {{ edu.gpa }}</span>{% endif %}
+                        </div>
+                        {% if edu.relevant_coursework %}
+                        <div class="text-xs text-gray-600 mt-2">
+                            <strong>Coursework:</strong> {{ edu.relevant_coursework | join(', ') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Skills -->
+                {% if skills %}
+                <div>
+                    <h2 class="text-xl font-bold accent-color mb-4 flex items-center">
+                        <div class="w-8 h-8 accent-bg rounded-full flex items-center justify-center text-white text-xs mr-3">⚡</div>
+                        SKILLS
+                    </h2>
+                    {% for skill_category, skill_list in skills.items() %}
+                    <div class="mb-4">
+                        <h3 class="font-semibold text-gray-800 mb-2 accent-color">{{ skill_category }}</h3>
+                        <div class="flex flex-wrap gap-2">
+                            {% for skill in skill_list %}
+                            <span class="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Projects -->
+            {% if projects %}
+            <div class="mb-8">
+                <h2 class="text-xl font-bold accent-color mb-4 flex items-center">
+                    <div class="w-8 h-8 accent-bg rounded-full flex items-center justify-center text-white text-xs mr-3">🚀</div>
+                    PROJECTS
+                </h2>
+                <div class="grid grid-cols-2 gap-4">
+                    {% for project in projects %}
+                    <div class="bg-white p-4 rounded-lg shadow-md border hover:shadow-lg transition-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-gray-900">{{ project.name }}</h3>
+                            {% if project.date %}<span class="text-xs text-gray-500">{{ project.date }}</span>{% endif %}
+                        </div>
+                        {% if project.description %}
+                        <p class="text-sm text-gray-700 mb-3">{{ project.description }}</p>
+                        {% endif %}
+                        {% if project.technologies %}
+                        <div class="flex flex-wrap gap-1">
+                            {% for tech in project.technologies %}
+                            <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">{{ tech }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Bottom Section -->
+            <div class="grid grid-cols-2 gap-8">
+                <!-- Certifications -->
+                {% if certifications %}
+                <div>
+                    <h2 class="text-xl font-bold accent-color mb-4 flex items-center">
+                        <div class="w-8 h-8 accent-bg rounded-full flex items-center justify-center text-white text-xs mr-3">🏆</div>
+                        CERTIFICATIONS
+                    </h2>
+                    {% for cert in certifications %}
+                    <div class="bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400 mb-3">
+                        <h3 class="font-semibold text-gray-800">{{ cert.name }}</h3>
+                        {% if cert.issuer %}<div class="text-sm text-gray-600">{{ cert.issuer }}</div>{% endif %}
+                        {% if cert.date %}<div class="text-sm text-yellow-600">{{ cert.date }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Activities -->
+                {% if activities %}
+                <div>
+                    <h2 class="text-xl font-bold accent-color mb-4 flex items-center">
+                        <div class="w-8 h-8 accent-bg rounded-full flex items-center justify-center text-white text-xs mr-3">🌟</div>
+                        ACTIVITIES
+                    </h2>
+                    {% for activity in activities %}
+                    <div class="bg-green-50 p-3 rounded-lg border-l-4 border-green-400 mb-3">
+                        <h3 class="font-semibold text-gray-800">{{ activity.title }}</h3>
+                        {% if activity.organization %}<div class="text-sm text-gray-600">{{ activity.organization }}</div>{% endif %}
+                        {% if activity.date %}<div class="text-sm text-green-600">{{ activity.date }}</div>{% endif %}
+                        {% if activity.description %}<div class="text-xs text-gray-600 mt-1">{{ activity.description }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

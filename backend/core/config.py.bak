@@ -1,0 +1,90 @@
+"""
+Configuration management for EasyInterns v2
+"""
+from pydantic import Field
+from pydantic_settings import BaseSettings
+from typing import List, Optional
+import json
+from pathlib import Path
+
+
+class Settings(BaseSettings):
+    # App Settings
+    app_name: str = Field(default="EasyInterns v2")
+    environment: str = Field(default="development")
+    debug: bool = Field(default=True)
+    allowed_origins: List[str] = Field(default=["http://localhost:3000", "http://127.0.0.1:3000"])
+    
+    # Database
+    database_url: str = Field(default="postgresql://user:pass@localhost:5432/easyinterns")
+    
+    # Supabase
+    supabase_url: str = Field(default="")
+    supabase_anon_key: str = Field(default="")
+    supabase_service_key: str = Field(default="")
+    supabase_jwt_secret: str = Field(default="")
+    
+    # Redis
+    redis_url: str = Field(default="redis://localhost:6379")
+    
+    # AI
+    openai_api_key: str = Field(default="")
+    
+    # External APIs
+    clearbit_logo_base: str = Field(default="https://logo.clearbit.com")
+    clearbit_api_key: Optional[str] = Field(default=None)
+    
+    # Security
+    secret_key: str = Field(default="dev-secret-key-change-in-production")
+    
+    # Feature Flags
+    enable_ai_features: bool = Field(default=True)
+    enable_email_extraction: bool = Field(default=True)
+    enable_pdf_export: bool = Field(default=True)
+    scraper_linkedin: bool = Field(default=False)
+    scraper_glassdoor: bool = Field(default=False)
+    enable_linkedin_scraper: bool = Field(default=False)
+    enable_glassdoor_scraper: bool = Field(default=False)
+    
+    # Scoring Weights
+    field_match_weight: float = Field(default=0.3)
+    skill_overlap_weight: float = Field(default=0.25)
+    recency_decay_weight: float = Field(default=0.2)
+    location_distance_weight: float = Field(default=0.15)
+    modality_match_weight: float = Field(default=0.05)
+    salary_present_weight: float = Field(default=0.03)
+    government_program_weight: float = Field(default=0.02)
+    
+    # Rate Limiting
+    rate_limit_per_minute: int = Field(default=100)
+    rate_limit_per_hour: int = Field(default=1000)
+    rate_limit_burst: int = Field(default=20)
+    
+    # Email Extraction
+    email_confidence_threshold: float = Field(default=0.5)
+    email_display_threshold: float = Field(default=0.7)
+    email_mx_lookup_enabled: bool = Field(default=True)
+    
+    # Monitoring
+    sentry_dsn: Optional[str] = Field(default=None)
+    log_level: str = Field(default="INFO")
+    enable_telemetry: bool = Field(default=True)
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        case_sensitive = False
+
+
+def load_scraper_config() -> dict:
+    """Load scraper configuration from JSON file"""
+    config_path = Path("config.example.json")
+    if config_path.exists():
+        with open(config_path) as f:
+            config = json.load(f)
+            return config.get("scraper_config", {})
+    return {}
+
+
+# Global settings instance
+settings = Settings()

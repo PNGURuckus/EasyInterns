@@ -1,0 +1,60 @@
+# Core
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-dotenv>=1.0.0
+pydantic>=2.4.0
+pydantic-settings>=2.0.0
+python-multipart>=0.0.6
+
+# Database
+sqlalchemy>=2.0.0
+sqlmodel>=0.0.8
+psycopg[binary]>=3.1.0
+alembic>=1.12.0
+
+# Async HTTP
+httpx>=0.25.0
+playwright>=1.39.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# Data Processing
+pandas>=2.1.0
+numpy>=1.24.0
+python-dateutil>=2.8.2
+tldextract>=5.1.0
+email-validator>=2.0.0
+
+# Templates
+jinja2>=3.1.2
+weasyprint>=60.0
+
+# AI/ML
+openai>=1.0.0
+sentence-transformers>=2.2.2
+
+# Authentication
+supabase>=2.0.0
+gotrue>=1.0.0
+
+# Queue & Background Tasks
+redis>=5.0.0
+rq>=1.15.1
+
+# Monitoring
+sentry-sdk[fastapi]>=1.30.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.1
+pytest-playwright>=0.2.2
+
+# Development
+black>=23.7.0
+isort>=5.12.0
+mypy>=1.5.0
+ruff>=0.0.282
+types-python-dateutil>=2.8.19
+types-requests>=2.31.0.1

@@ -8,8 +8,8 @@ def _load_json(p): return json.loads(Path(p).read_text(encoding="utf-8"))
 
 def cmd_scrape(args):
     cfg = _load_json(args.config)
-    n = asyncio.run(scrape_and_store(cfg))
-    print(f"Inserted {n} new opportunities.")
+    stats = asyncio.run(scrape_and_store(cfg))
+    print(f"Inserted {stats['inserted']} new opportunities (fetched {stats['fetched']}).")
 
 def cmd_rank(args):
     prof = _load_json(args.profile)

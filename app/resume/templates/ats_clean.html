@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ name or 'Resume' }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+            .page-break { page-break-before: always; }
+        }
+        body { font-family: 'Times New Roman', serif; }
+    </style>
+</head>
+<body class="bg-white text-black text-sm leading-tight">
+    <div class="max-w-4xl mx-auto p-8">
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold uppercase tracking-wide mb-2">{{ name or 'Your Name' }}</h1>
+            <div class="text-sm space-y-1">
+                {% if email %}<div>{{ email }}</div>{% endif %}
+                {% if phone %}<div>{{ phone }}</div>{% endif %}
+                {% if location %}<div>{{ location }}</div>{% endif %}
+                {% if linkedin %}<div>LinkedIn: {{ linkedin }}</div>{% endif %}
+                {% if github %}<div>GitHub: {{ github }}</div>{% endif %}
+            </div>
+        </div>
+
+        <!-- Summary -->
+        {% if summary %}
+        <div class="mb-6">
+            <h2 class="text-lg font-bold uppercase border-b border-black mb-2">PROFESSIONAL SUMMARY</h2>
+            <p class="text-justify">{{ summary }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Education -->
+        {% if education %}
+        <div class="mb-6">
+            <h2 class="text-lg font-bold uppercase border-b border-black mb-2">EDUCATION</h2>
+            {% for edu in education %}
+            <div class="mb-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="font-bold">{{ edu.degree }}</div>
+                        <div>{{ edu.school }}</div>
+                        {% if edu.location %}<div>{{ edu.location }}</div>{% endif %}
+                    </div>
+                    <div class="text-right">
+                        {% if edu.graduation_date %}<div>{{ edu.graduation_date }}</div>{% endif %}
+                        {% if edu.gpa %}<div>GPA: {{ edu.gpa }}</div>{% endif %}
+                    </div>
+                </div>
+                {% if edu.relevant_coursework %}
+                <div class="mt-1">
+                    <span class="font-semibold">Relevant Coursework:</span> {{ edu.relevant_coursework | join(', ') }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Experience -->
+        {% if experience %}
+        <div class="mb-6">
+            <h2 class="text-lg font-bold uppercase border-b border-black mb-2">EXPERIENCE</h2>
+            {% for exp in experience %}
+            <div class="mb-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="font-bold">{{ exp.title }}</div>
+                        <div>{{ exp.company }}</div>
+                        {% if exp.location %}<div>{{ exp.location }}</div>{% endif %}
+                    </div>
+                    <div class="text-right">
+                        <div>{{ exp.start_date }} - {{ exp.end_date or 'Present' }}</div>
+                    </div>
+                </div>
+                {% if exp.bullets %}
+                <ul class="mt-2 space-y-1">
+                    {% for bullet in exp.bullets %}
+                    <li class="flex">
+                        <span class="mr-2">•</span>
+                        <span>{{ bullet }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Projects -->
+        {% if projects %}
+        <div class="mb-6">
+            <h2 class="text-lg font-bold uppercase border-b border-black mb-2">PROJECTS</h2>
+            {% for project in projects %}
+            <div class="mb-3">
+                <div class="flex justify-between items-start">
+                    <div class="font-bold">{{ project.name }}</div>
+                    {% if project.date %}<div>{{ project.date }}</div>{% endif %}
+                </div>
+                {% if project.description %}
+                <div class="mt-1">{{ project.description }}</div>
+                {% endif %}
+                {% if project.technologies %}
+                <div class="mt-1">
+                    <span class="font-semibold">Technologies:</span> {{ project.technologies | join(', ') }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Skills -->
+        {% if skills %}
+        <div class="mb-6">
+            <h2 class="text-lg font-bold uppercase border-b border-black mb-2">TECHNICAL SKILLS</h2>
+            {% for skill_category, skill_list in skills.items() %}
+            <div class="mb-2">
+                <span class="font-semibold">{{ skill_category }}:</span> {{ skill_list | join(', ') }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Certifications -->
+        {% if certifications %}
+        <div class="mb-6">
+            <h2 class="text-lg font-bold uppercase border-b border-black mb-2">CERTIFICATIONS</h2>
+            {% for cert in certifications %}
+            <div class="mb-2">
+                <div class="flex justify-between">
+                    <span class="font-bold">{{ cert.name }}</span>
+                    {% if cert.date %}<span>{{ cert.date }}</span>{% endif %}
+                </div>
+                {% if cert.issuer %}<div>{{ cert.issuer }}</div>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Activities -->
+        {% if activities %}
+        <div class="mb-6">
+            <h2 class="text-lg font-bold uppercase border-b border-black mb-2">ACTIVITIES & LEADERSHIP</h2>
+            {% for activity in activities %}
+            <div class="mb-2">
+                <div class="flex justify-between">
+                    <span class="font-bold">{{ activity.title }}</span>
+                    {% if activity.date %}<span>{{ activity.date }}</span>{% endif %}
+                </div>
+                {% if activity.organization %}<div>{{ activity.organization }}</div>{% endif %}
+                {% if activity.description %}<div>{{ activity.description }}</div>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
