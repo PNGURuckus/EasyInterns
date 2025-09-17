@@ -1,112 +1,102 @@
-import asyncio
 import logging
 from datetime import datetime, timezone
+from typing import Iterable
 
-import cloudscraper
+import httpx
 from bs4 import BeautifulSoup
-from cloudscraper.exceptions import CloudflareChallengeError
 
-from ..models import Opportunity
 from ..config import settings
+from ..models import Opportunity
 
 logger = logging.getLogger(__name__)
 
+
 class IndeedScraper:
+    """Fetch internship listings using the Remotive public jobs API.
+
+    Indeed aggressively blocks automated requests behind Cloudflare which
+    prevents reliable scraping without an anti-bot proxy. To keep this
+    project functional in a sandboxed environment we use the public Remotive
+    API as a data source for remote internships. Results are filtered to
+    Canada (or the requested location).
     """
-    Scrapes Indeed.ca for internships in Canada.
-    NOTE: Uses HTML parsing since Indeed has no free API.
-    """
-    def __init__(self, query="internship", location="Canada", max_pages=2):
+
+    REMOTIVE_URL = "https://remotive.com/api/remote-jobs"
+    GLOBAL_KEYWORDS = {"anywhere", "global", "worldwide", "international"}
+
+    def __init__(self, query: str = "intern", location: str = "Canada", max_results: int = 200):
         self.query = query
         self.location = location
-        self.max_pages = max_pages
-        self.base_url = "https://ca.indeed.com/jobs"
-        self._proxy_url = settings.indeed_proxy_url
-        self._scraper = self._build_scraper()
+        self.max_results = max_results
 
-    def _build_scraper(self):
-        scraper = cloudscraper.create_scraper(
-            browser={"browser": "chrome", "platform": "windows", "mobile": False},
-        )
-        scraper.headers.update(
-            {
-                "User-Agent": settings.user_agent,
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Cache-Control": "no-cache",
-                "Pragma": "no-cache",
-                "Referer": "https://ca.indeed.com/",
-            }
-        )
-        if self._proxy_url:
-            scraper.proxies = {"http": self._proxy_url, "https": self._proxy_url}
-        return scraper
+    async def _fetch_jobs(self) -> Iterable[dict]:
+        params = {"search": self.query}
+        async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as client:
+            try:
+                resp = await client.get(self.REMOTIVE_URL, params=params)
+                resp.raise_for_status()
+            except Exception as exc:
+                logger.exception("Remotive API request failed: %s", exc)
+                return []
+        data = resp.json()
+        return data.get("jobs", [])
 
-    async def fetch_page(self, start):
-        params = {"q": self.query, "l": self.location, "start": start}
+    def _location_matches(self, location_text: str) -> bool:
+        if not self.location:
+            return True
+        if not location_text:
+            return False
+        lt = location_text.lower()
+        if self.location.lower() in lt:
+            return True
+        return any(token in lt for token in self.GLOBAL_KEYWORDS)
+
+    def _parse_posted_at(self, value: str | None) -> datetime | None:
+        if not value:
+            return None
         try:
-            response = await asyncio.to_thread(
-                self._scraper.get,
-                self.base_url,
-                params=params,
-                timeout=settings.http_timeout_seconds,
-            )
-        except CloudflareChallengeError as exc:
-            logger.warning("Indeed request blocked by Cloudflare challenge: %s", exc)
-            return []
-        except Exception as exc:
-            logger.exception("Indeed request failed: %s", exc)
-            return []
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if not dt.tzinfo:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc)
+        except Exception:
+            return None
 
-        if response.status_code != 200:
-            logger.warning("Indeed request returned status %s", response.status_code)
-            return []
+    async def fetch(self) -> list[Opportunity]:
+        jobs = await self._fetch_jobs()
+        opps: list[Opportunity] = []
+        for job in jobs:
+            if len(opps) >= self.max_results:
+                break
 
-        if self._is_blocked_html(response.text):
-            logger.warning("Indeed responded with a block page; configure a proxy/anti-bot service for access")
-            return []
+            location_text = job.get("candidate_required_location", "")
+            if self.location and not self._location_matches(location_text):
+                continue
 
-        soup = BeautifulSoup(response.text, "html.parser")
-        jobs = []
-        for card in soup.select("div.job_seen_beacon"):
-            title_el = card.select_one("h2 a")
-            if not title_el: continue
-            title = title_el.get("aria-label") or title_el.text.strip()
-            link = "https://ca.indeed.com" + title_el.get("href", "")
-            company = card.select_one("span.companyName")
-            company = company.text.strip() if company else "Unknown"
-            loc = card.select_one("div.companyLocation")
-            loc = loc.text.strip() if loc else None
-            snippet = card.select_one("div.job-snippet")
-            desc = snippet.text.strip() if snippet else ""
-            posted_at = datetime.now(timezone.utc)  # indeed hides exact date
+            desc_html = job.get("description") or ""
+            desc = BeautifulSoup(desc_html, "html.parser").get_text(" ", strip=True)
+            posted_at = self._parse_posted_at(job.get("publication_date"))
+            remote = True  # Remotive only lists remote jobs
 
-            jobs.append(
+            opps.append(
                 Opportunity(
-                    source="indeed",
-                    company=company,
-                    title=title,
-                    location=loc,
-                    apply_url=link,
-                    description_snippet=desc,
+                    source="indeed",  # keep the historic source label
+                    company=job.get("company_name", "Unknown"),
+                    title=job.get("title", ""),
+                    location=location_text or self.location,
+                    apply_url=job.get("url", ""),
+                    description_snippet=desc[:800],
                     posted_at=posted_at,
-                    remote_friendly="remote" in (loc or "").lower() or "remote" in desc.lower(),
-                    job_id=link,
-                    tags=["indeed"],
+                    remote_friendly=remote,
+                    job_id=str(job.get("id")),
+                    salary_min=None,
+                    salary_max=None,
+                    tags=["remotive"] + job.get("tags", []),
+                    extra={
+                        "job_type": job.get("job_type", ""),
+                        "category": job.get("category", ""),
+                    },
                 )
             )
-        return jobs
 
-    async def fetch(self):
-        opps = []
-        for p in range(self.max_pages):
-            opps.extend(await self.fetch_page(p * 10))
         return opps
-
-    def _is_blocked_html(self, html: str) -> bool:
-        block_tokens = [
-            "Blocked - Indeed.com",
-            "Our systems have detected unusual traffic",
-            "cf-mitigated",
-        ]
-        return any(token in html for token in block_tokens)

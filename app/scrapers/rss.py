@@ -1,8 +1,11 @@
-import httpx, re
-import feedparser
+import httpx
+import re
 from datetime import datetime, timezone
-from ..models import Opportunity
+
+import feedparser
+
 from ..config import settings
+from ..models import Opportunity
 
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
@@ -17,10 +20,14 @@ class RSSScraper:
 
     async def fetch_feed(self, client, name, url):
         try:
-            r = await client.get(url, headers={"User-Agent": settings.user_agent}, timeout=15)
+            r = await client.get(
+                url,
+                headers={"User-Agent": settings.user_agent, "Accept": "application/rss+xml"},
+                timeout=settings.http_timeout_seconds,
+            )
             if r.status_code != 200:
                 return []
-            parsed = feedparser.parse(r.text)
+            parsed = feedparser.parse(r.content)
         except Exception:
             return []
 
@@ -30,12 +37,14 @@ class RSSScraper:
             link = entry.get("link", "")
             desc = entry.get("summary", "")[:800]
             posted_at = None
-            if "published_parsed" in entry and entry.published_parsed:
+            if getattr(entry, "published_parsed", None):
                 posted_at = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+            elif getattr(entry, "updated_parsed", None):
+                posted_at = datetime(*entry.updated_parsed[:6], tzinfo=timezone.utc)
 
             emails = EMAIL_RE.findall(desc)
             tags = [name]  # tag it with the feed name
-
+            
             opps.append(
                 Opportunity(
                     source="rss",
