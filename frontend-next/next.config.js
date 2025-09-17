@@ -2,6 +2,11 @@
 const nextConfig = {
   experimental: {
     appDir: true,
+    // Allow opening dev server via localhost or 127.0.0.1 without warnings
+    allowedDevOrigins: [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+    ],
   },
   images: {
     domains: ['logo.clearbit.com', 'supabase.co'],
