@@ -1,10 +1,12 @@
 import { API_BASE_URL, API_PREFIX } from '@/config';
 
+type PrimitiveParam = string | number | boolean
+
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   body?: any;
   headers?: Record<string, string>;
-  params?: Record<string, string | number | boolean | undefined>;
+  params?: Record<string, PrimitiveParam | PrimitiveParam[] | undefined>;
   authToken?: string | null;
 };
 
@@ -37,10 +39,16 @@ export async function apiRequest<T = any>(
   
   // Add query parameters
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      url.searchParams.append(key, String(value));
+    if (value === undefined || value === null) {
+      return
     }
-  });
+
+    if (Array.isArray(value)) {
+      value.forEach((item) => url.searchParams.append(key, String(item)))
+    } else {
+      url.searchParams.append(key, String(value))
+    }
+  })
 
   // Set up headers
   const defaultHeaders: Record<string, string> = {
@@ -91,6 +99,7 @@ export const internshipApi = {
     limit?: number;
     query?: string;
     location?: string;
+    locations?: string[];
     is_remote?: boolean;
     min_salary?: number;
     max_salary?: number;

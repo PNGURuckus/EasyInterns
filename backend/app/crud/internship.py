@@ -1,11 +1,11 @@
 from typing import List, Optional, Union, Dict, Any
 from uuid import UUID
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.internship import Internship, InternshipCreate, InternshipUpdate, InternshipPublic
-from app.models.company import Company
+from app.models.base import WorkLocation
 from app.crud.base import CRUDBase
 
 class CRUDInternship(CRUDBase[Internship, InternshipCreate, InternshipUpdate]):
@@ -53,6 +53,7 @@ class CRUDInternship(CRUDBase[Internship, InternshipCreate, InternshipUpdate]):
         *,
         query: Optional[str] = None,
         location: Optional[str] = None,
+        locations: Optional[List[str]] = None,
         is_remote: Optional[bool] = None,
         min_salary: Optional[float] = None,
         max_salary: Optional[float] = None,
@@ -74,12 +75,23 @@ class CRUDInternship(CRUDBase[Internship, InternshipCreate, InternshipUpdate]):
                 Internship.description.ilike(search_terms),
             ])
         
-        if location:
-            location_terms = f"%{location.lower()}%"
-            filters.append(Internship.location.ilike(location_terms))
-            
+        def _normalize(value: str) -> str:
+            return " ".join(value.lower().split())
+
+        if locations:
+            normalized_locations = [_normalize(loc) for loc in locations if loc]
+            if normalized_locations:
+                normalized_column = func.lower(func.trim(Internship.location))
+                filters.append(normalized_column.in_(normalized_locations))
+        elif location:
+            normalized_column = func.lower(func.trim(Internship.location))
+            filters.append(normalized_column == _normalize(location))
+
         if is_remote is not None:
-            filters.append(Internship.is_remote == is_remote)
+            if is_remote:
+                filters.append(Internship.work_location == WorkLocation.REMOTE)
+            else:
+                filters.append(Internship.work_location != WorkLocation.REMOTE)
             
         if min_salary is not None:
             filters.append(Internship.salary_min >= min_salary)
