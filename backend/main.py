@@ -6,9 +6,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from core.config import settings
-from core.database import create_db_and_tables
-from api import internships, users, resumes, scrape
+from backend.core.config import settings
+from backend.core.database import create_db_and_tables
+from backend.api import internships, users, resumes, scrape
 
 
 @asynccontextmanager

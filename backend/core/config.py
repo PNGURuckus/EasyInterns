@@ -2,12 +2,21 @@
 Configuration management for EasyInterns v2
 """
 import os
-from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings
-from typing import List, Optional, Union
+from pydantic import Field, field_validator, PrivateAttr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Dict, List, Optional, Union
 from pathlib import Path
 
+_ALIAS_MAP: Dict[str, str] = {
+    "database_url": "DATABASE_URL",
+    "debug": "DEBUG",
+    "environment": "ENVIRONMENT",
+    "allowed_origins": "BACKEND_CORS_ORIGINS",
+}
+
+
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False)
     # Application
     APP_NAME: str = "EasyInterns"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
@@ -21,7 +30,10 @@ class Settings(BaseSettings):
     SERVER_PORT: int = int(os.getenv("PORT", "8000"))
     
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+    BACKEND_CORS_ORIGINS: List[str] = Field(
+        default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"],
+        alias="ALLOWED_ORIGINS"
+    )
     
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+pysqlite:///./easyintern_v2.db")
@@ -111,10 +123,30 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO")
     enable_telemetry: bool = Field(default=True)
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    # Compatibility helpers -------------------------------------------------
+    # Map legacy attribute names used elsewhere in the codebase to the new
+    # uppercase settings introduced in this module.
+    _aliases: Dict[str, str] = PrivateAttr(default_factory=lambda: dict(_ALIAS_MAP))
+
+    def _get_alias_map(self) -> Dict[str, str]:
+        try:
+            return object.__getattribute__(self, "_aliases")
+        except AttributeError:
+            return _ALIAS_MAP
+
+    def __getattr__(self, item):
+        alias_map = self._get_alias_map()
+        alias = alias_map.get(item)
+        if alias is not None:
+            return super().__getattribute__(alias)
+        return super().__getattribute__(item)
+
+    def __setattr__(self, key, value):
+        alias_map = self._get_alias_map()
+        alias = alias_map.get(key)
+        if alias is not None:
+            return super().__setattr__(alias, value)
+        return super().__setattr__(key, value)
 
 
 def load_scraper_config() -> dict:
